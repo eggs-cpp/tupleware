@@ -1,6 +1,6 @@
 //! \file eggs/tupleware/size.hpp
 // Eggs.Tupleware
-// 
+//
 // Copyright Agustin K-ballo Berge, Fusion Fenix 2014
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -28,10 +28,12 @@ namespace eggs { namespace tupleware
               , typename Enable = void
             >
             struct size_impl
+              : identity<null>
             {};
 
             template <typename Tuple>
             struct size_impl<Tuple const>
+              : identity<null>
             {};
 
             template <typename Tuple>
@@ -49,7 +51,7 @@ namespace eggs { namespace tupleware
 
         template <typename Tuple>
         struct size
-          : detail::size_impl<Tuple>
+          : detail::size_impl<Tuple>::type
         {};
     }
 
@@ -57,7 +59,7 @@ namespace eggs { namespace tupleware
     namespace detail
     {
         template <typename Tuple>
-        constexpr auto size(Tuple&& /*tuple*/)
+        constexpr auto size(meta::identity<Tuple>)
         EGGS_TUPLEWARE_AUTO_RETURN(
             typename meta::size<typename std::decay<Tuple>::type>::type{}
         )
@@ -74,7 +76,7 @@ namespace eggs { namespace tupleware
         template <typename Tuple>
         struct size
           : detail::_result_of_size<pack<
-                Tuple
+                meta::identity<Tuple>
             >>
         {};
 
@@ -85,9 +87,17 @@ namespace eggs { namespace tupleware
 
     template <typename Tuple>
     constexpr result_of::size_t<Tuple>
+    size()
+    EGGS_TUPLEWARE_RETURN(
+        detail::size(meta::identity<Tuple>{})
+    )
+
+    template <typename Tuple>
+    constexpr result_of::size_t<Tuple>
     size(Tuple const& tuple)
     EGGS_TUPLEWARE_RETURN(
-        detail::size(tuple)
+        detail::size(
+            (static_cast<void>(tuple), meta::identity<Tuple>{}))
     )
 
     namespace functional

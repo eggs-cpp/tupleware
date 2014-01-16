@@ -13,6 +13,42 @@
 #include <tuple>
 #include <type_traits>
 
+//! \page tuple_protocol tuple-like protocol
+//!
+//! The `tuple`-like protocol is a set of standard traits and function
+//! overloads that allow operating on a type that is not `std::tuple<...>`,
+//! but can conform to its access interface. Examples of such types are
+//! `std::pair<T, U>` and `std::array<N, T>`.
+//!
+//! In order for a type `T` to support the `tuple`-like protocol, it has to
+//! meet the following requirements:
+//!
+//! - Provide a specialization of [`std::tuple_size<T>`]
+//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_size) with a
+//! BaseCharacteristic of `std::integral_constant<Integral, Value>` where
+//! `Value` is an instance of type `Integral` representing the number of
+//! elements in `T`. Specializations for _cv-qualified_ `T`s forwarding to
+//! the base trait are provided by the Standard Library.
+//!
+//! - Provide a specialization of [`std::tuple_element<I, T>`]
+//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_element) with a 
+//! nested typedef `type` naming the `I`th element of `T`, where indexing is
+//! zero based. Specializations for _cv-qualified_ `T`s forwarding to
+//! the base trait are provided by the Standard Library.
+//!
+//! - Provide overloads of [`std::get<I>`]
+//! (http://en.cppreference.com/w/cpp/utility/tuple/get) where:
+//!
+//!   + `std::get<I>(T& t)` returns a reference to the `I`th element of `t`,
+//!     where indexing is zero-based.
+//!
+//!   + `std::get<I>(T&& t)` is equivalent to
+//!     `return std::forward<TI>(get<I>(t))` with `TI` being the `I`th element
+//!     of `T`, where indexing is zero-based.
+//!
+//!   + `std::get<I>(T const& t)` returns a const reference to the `I`th
+//!     element of `t`, where indexing is zero-based.
+
 namespace eggs { namespace tupleware
 {
     ///////////////////////////////////////////////////////////////////////////
