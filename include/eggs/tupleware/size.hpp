@@ -21,20 +21,17 @@ namespace eggs { namespace tupleware
 {
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <
                 typename Tuple
               , typename Enable = void
             >
-            struct size_impl
-              : identity<null>
-            {};
+            struct size_impl;
 
             template <typename Tuple>
-            struct size_impl<Tuple const>
-              : identity<null>
-            {};
+            struct size_impl<Tuple const>;
 
             template <typename Tuple>
             struct size_impl<
@@ -48,14 +45,31 @@ namespace eggs { namespace tupleware
                 >
             {};
         }
+        //! \endcond
 
+        //! \brief The number of elements in the type `Tuple`
+        //!
+        //! \details Has a BaseCharacteristic of
+        //! `std::integral_constant<std::size_t, Value>` where `Value` is the
+        //! number of elements in the type `Tuple`.
+        //!
+        //! \tparam Tuple A type that is queried for its number of elements.
+        //!
+        //! \requires The type `Tuple` shall support the \ref tuple_protocol.
+        //!
+        //! \see \link size() \endlink,
+        //!      \link size(Tuple const&) \endlink,
+        //!      \link result_of::size \endlink,
+        //!      \link result_of::size_t \endlink,
+        //!      \link functional::size \endlink
         template <typename Tuple>
         struct size
-          : detail::size_impl<Tuple>::type
+          : detail::size_impl<Tuple>
         {};
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename Tuple>
@@ -70,9 +84,21 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::size
         );
     }
+    //! \endcond
 
     namespace result_of
     {
+        //! \brief Result type of an invocation of \ref size(Tuple const&)
+        //!
+        //! \remarks The nested typedef `type` is equivalent to
+        //! `decltype(size(std::declval<Tuple>()))` when such expression is
+        //! well-formed, otherwise it does not exist.
+        //!
+        //! \see \link meta::size \endlink,
+        //!      \link size() \endlink,
+        //!      \link size(Tuple const&) \endlink,
+        //!      \link result_of::size_t \endlink,
+        //!      \link functional::size \endlink
         template <typename Tuple>
         struct size
           : detail::_result_of_size<pack<
@@ -80,11 +106,35 @@ namespace eggs { namespace tupleware
             >>
         {};
 
+        //! \brief Alias for \link result_of::size \endlink
+        //!
+        //! \see \link meta::size \endlink,
+        //!      \link size() \endlink,
+        //!      \link size(Tuple const&) \endlink,
+        //!      \link result_of::size \endlink
+        //!      \link functional::size \endlink,
         template <typename Tuple>
         using size_t =
             typename size<Tuple>::type;
     }
 
+    //! \brief The number of elements in the type `Tuple`
+    //!
+    //! \tparam Tuple A type that is queried for its number of elements.
+    //!
+    //! \returns An instance of `std::integral_constant<std::size_t, Value>`
+    //! where `Value` is the number of elements in the type `Tuple`.
+    //!
+    //! \remarks Equivalent to
+    //! `typename meta::tuple_size<typename std::decay<T>::type>::type{}`
+    //!
+    //! \requires The type `Tuple` shall support the \ref tuple_protocol.
+    //!
+    //! \see \link meta::size \endlink,
+    //!      \link size(Tuple const&) \endlink,
+    //!      \link result_of::size \endlink,
+    //!      \link result_of::size_t \endlink,
+    //!      \link functional::size \endlink
     template <typename Tuple>
     constexpr result_of::size_t<Tuple>
     size()
@@ -92,6 +142,24 @@ namespace eggs { namespace tupleware
         detail::size(meta::identity<Tuple>{})
     )
 
+    //! \brief The number of elements in the type of `tuple`
+    //!
+    //! \param tuple An object whose type is queried for its number of
+    //! elements.
+    //!
+    //! \returns An instance of `std::integral_constant<std::size_t, Value>`
+    //! where `Value` is the number of elements in the type of `tuple`.
+    //!
+    //! \remarks Equivalent to
+    //! `typename meta::tuple_size<typename std::decay<decltype(value)>::type>::type{}`
+    //!
+    //! \requires The type of `tuple` shall support the \ref tuple_protocol.
+    //!
+    //! \see \link meta::size \endlink,
+    //!      \link size() \endlink,
+    //!      \link result_of::size \endlink,
+    //!      \link result_of::size_t \endlink,
+    //!      \link functional::size \endlink
     template <typename Tuple>
     constexpr result_of::size_t<Tuple>
     size(Tuple const& tuple)
@@ -102,8 +170,19 @@ namespace eggs { namespace tupleware
 
     namespace functional
     {
+        //! \brief Functional version of \ref size(Tuple const&)
+        //!
+        //! \see \link meta::size \endlink,
+        //!      \link size() \endlink,
+        //!      \link size(Tuple const&) \endlink,
+        //!      \link result_of::size \endlink
+        //!      \link result_of::size_t \endlink,
         struct size
         {
+            //! \copydoc size(Tuple const&)
+            //!
+            //! \remarks This `operator()` shall not participate in overload
+            //! resolution if the invoke expression is ill-formed.
             template <typename Tuple>
             constexpr result_of::size_t<Tuple>
             operator()(Tuple&& tuple) const

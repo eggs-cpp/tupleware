@@ -22,6 +22,7 @@ namespace eggs { namespace tupleware
 {
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <
@@ -84,6 +85,7 @@ namespace eggs { namespace tupleware
                     >;
             };
         }
+        //! \endcond
 
         template <
             std::size_t Where
@@ -112,6 +114,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <
@@ -187,6 +190,7 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::insert
         );
     }
+    //! \endcond
 
     namespace result_of
     {

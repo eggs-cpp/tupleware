@@ -24,12 +24,12 @@ namespace eggs { namespace tupleware
               , typename Enable = void
             >
             struct is_tuple_impl
-              : identity<std::false_type>
+              : std::false_type
             {};
 
             template <typename T>
             struct is_tuple_impl<T const>
-              : identity<std::false_type>
+              : std::false_type
             {};
 
             template <typename T>
@@ -38,29 +38,27 @@ namespace eggs { namespace tupleware
               , typename std::enable_if<
                     (std::tuple_size<T>::value >= 0)
                 >::type
-            > : identity<std::true_type>
+            > : std::true_type
             {};
         }
         //! \endcond
 
         //! \brief Whether the type `T` supports the \ref tuple_protocol
         //!
-        //! Has a BaseCharacteristic of `std::true_type` if the type `T`
-        //! supports the \ref tuple_protocol, otherwise it has a
+        //! \details Has a BaseCharacteristic of `std::true_type` if the type
+        //! `T` supports the \ref tuple_protocol, otherwise it has a
         //! BaseCharacteristic of `std::false_type`.
         //!
-        //! \tparam T The type to check for \ref tuple_protocol support.
-        //!
-        //! \note The specializations required by the \ref tuple_protocol
-        //! must be visible at the point of instantiation of this trait.
+        //! \tparam T A type that is checked for \ref tuple_protocol support.
         //!
         //! \see \link is_tuple() \endlink,
         //!      \link is_tuple(T&&) \endlink,
         //!      \link result_of::is_tuple \endlink,
+        //!      \link result_of::is_tuple_t \endlink,
         //!      \link functional::is_tuple \endlink
         template <typename T>
         struct is_tuple
-          : detail::is_tuple_impl<T>::type
+          : detail::is_tuple_impl<T>
         {};
     }
 
@@ -90,12 +88,10 @@ namespace eggs { namespace tupleware
         //! `decltype(is_tuple(std::declval<T>()))` when such expression is
         //! well-formed, otherwise it does not exist.
         //!
-        //! \note The specializations required by the \ref tuple_protocol
-        //! must be visible at the point of instantiation of this trait.
-        //!
         //! \see \link meta::is_tuple \endlink,
         //!      \link is_tuple() \endlink,
         //!      \link is_tuple(T&&) \endlink,
+        //!      \link result_of::is_tuple_t \endlink,
         //!      \link functional::is_tuple \endlink
         template <typename T>
         struct is_tuple
@@ -105,6 +101,12 @@ namespace eggs { namespace tupleware
         {};
 
         //! \brief Alias for \link result_of::is_tuple \endlink
+        //!
+        //! \see \link meta::is_tuple \endlink,
+        //!      \link is_tuple() \endlink,
+        //!      \link is_tuple(T&&) \endlink,
+        //!      \link result_of::is_tuple \endlink
+        //!      \link functional::is_tuple \endlink,
         template <typename T>
         using is_tuple_t =
             typename is_tuple<T>::type;
@@ -121,12 +123,10 @@ namespace eggs { namespace tupleware
     //! \remarks Equivalent to
     //! `typename meta::is_tuple<typename std::decay<T>::type>::type{}`
     //!
-    //! \note The specializations required by the \ref tuple_protocol
-    //! must be visible at the point of instantiation of this trait.
-    //!
     //! \see \link meta::is_tuple \endlink,
     //!      \link is_tuple(T&&) \endlink,
     //!      \link result_of::is_tuple \endlink,
+    //!      \link result_of::is_tuple_t \endlink,
     //!      \link functional::is_tuple \endlink
     template <typename T>
     constexpr result_of::is_tuple_t<T>
@@ -147,12 +147,10 @@ namespace eggs { namespace tupleware
     //! \remarks Equivalent to
     //! `typename meta::is_tuple<typename std::decay<decltype(value)>::type>::type{}`
     //!
-    //! \note The specializations required by the \ref tuple_protocol
-    //! must be visible at the point of instantiation of this trait.
-    //!
     //! \see \link meta::is_tuple \endlink,
     //!      \link is_tuple() \endlink,
     //!      \link result_of::is_tuple \endlink,
+    //!      \link result_of::is_tuple_t \endlink,
     //!      \link functional::is_tuple \endlink
     template <typename T>
     constexpr result_of::is_tuple_t<T>
@@ -166,19 +164,14 @@ namespace eggs { namespace tupleware
     {
         //! \brief Functional version of \ref is_tuple(T&&)
         //!
-        //! \note The specializations required by the \ref tuple_protocol
-        //! must be visible at the point of instantiation of this trait.
-        //!
         //! \see \link meta::is_tuple \endlink,
         //!      \link is_tuple() \endlink,
         //!      \link is_tuple(T&&) \endlink,
         //!      \link result_of::is_tuple \endlink
+        //!      \link result_of::is_tuple_t \endlink,
         struct is_tuple
         {
             //! \copydoc is_tuple(T&&)
-            //!
-            //! \remarks This `operator()` will not participate in overload
-            //! resolution if the invoke expression is ill-formed.
             template <typename T>
             constexpr auto operator()(T&& value) const
             EGGS_TUPLEWARE_AUTO_RETURN(

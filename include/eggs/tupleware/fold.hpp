@@ -23,6 +23,7 @@ namespace eggs { namespace tupleware
 {
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <
@@ -60,6 +61,7 @@ namespace eggs { namespace tupleware
                     >::type;
             };
         }
+        //! \endcond
 
         template <typename Tuple, typename UnaryMetaFunction, typename State>
         struct fold
@@ -71,6 +73,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename Tuple, typename F, typename State>
@@ -110,6 +113,7 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::fold
         );
     }
+    //! \endcond
 
     namespace result_of
     {

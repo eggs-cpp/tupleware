@@ -1,6 +1,6 @@
 //! \file eggs/tupleware/invoke.hpp
 // Eggs.Tupleware
-// 
+//
 // Copyright Agustin K-ballo Berge, Fusion Fenix 2014
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -21,6 +21,7 @@ namespace eggs { namespace tupleware
 {
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <typename T, typename ...Args>
@@ -48,6 +49,7 @@ namespace eggs { namespace tupleware
                     Template<typename invoke_impl<T, Args>::type...>;
             };
         }
+        //! \endcond
 
         template <typename MetaFunction, typename ...Args>
         struct invoke
@@ -56,6 +58,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename F, typename ...Args>
@@ -109,8 +112,9 @@ namespace eggs { namespace tupleware
             std::forward<F>(f)(std::forward<Args>(args)...)
         )
 
-        template <typename F, typename ...Args,
-            typename Enable =
+        template <
+            typename F, typename ...Args
+          , typename Enable =
                 typename std::enable_if<
                     !std::is_same<
                         decltype(invoke_overload(
@@ -152,6 +156,7 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::invoke
         );
     }
+    //! \endcond
 
     namespace result_of
     {
@@ -218,7 +223,7 @@ namespace eggs { namespace tupleware
         result_of::invoke<F, Args...>
     >::type invoke(F&& f, Args&&... args)
     {
-        std::forward<F>(f)(std::forward<Args>(args)...);
+        //std::forward<F>(f)(std::forward<Args>(args)...);
 
         static_assert(
             tupleware::detail::inject_context<

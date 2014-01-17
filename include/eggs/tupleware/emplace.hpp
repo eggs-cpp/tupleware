@@ -21,6 +21,7 @@
 
 namespace eggs { namespace tupleware
 {
+    //! \cond DETAIL
     namespace detail
     {
         template <
@@ -64,6 +65,7 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::emplace
         );
     }
+    //! \endcond
 
     namespace result_of
     {

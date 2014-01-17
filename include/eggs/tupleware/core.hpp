@@ -31,7 +31,7 @@
 //! the base trait are provided by the Standard Library.
 //!
 //! - Provide a specialization of [`std::tuple_element<I, T>`]
-//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_element) with a 
+//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_element) with a
 //! nested typedef `type` naming the `I`th element of `T`, where indexing is
 //! zero based. Specializations for _cv-qualified_ `T`s forwarding to
 //! the base trait are provided by the Standard Library.
@@ -48,6 +48,10 @@
 //!
 //!   + `std::get<I>(T const& t)` returns a const reference to the `I`th
 //!     element of `t`, where indexing is zero-based.
+//!
+//! \note The specializations and overloads required by this protocol must be
+//! visible at the point of instantiation of any of the structs and functions
+//! of this library.
 
 namespace eggs { namespace tupleware
 {
@@ -90,11 +94,13 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <std::size_t I>
             struct placeholder {};
         }
+        //! \endcond
 
         namespace placeholders
         {
@@ -135,12 +141,7 @@ namespace eggs { namespace tupleware
     using std::forward_as_tuple;
 
     ///////////////////////////////////////////////////////////////////////////
-    namespace detail
-    {
-        struct access {};
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename T>
@@ -153,8 +154,10 @@ namespace eggs { namespace tupleware
         using always_void =
             typename _always_void_impl<T>::type;
     }
+    //! \endcond
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename Expr, typename T, typename Enable = void>
@@ -194,8 +197,10 @@ namespace eggs { namespace tupleware
           : detail::_disable_if_failure_impl<Expr, T>
         {};
     }
+    //! \endcond
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename TD>
@@ -215,8 +220,10 @@ namespace eggs { namespace tupleware
           : _decay_impl<typename std::decay<T>::type>
         {};
     }
+    //! \endcond
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename T, T ...I>
@@ -307,8 +314,10 @@ namespace eggs { namespace tupleware
                 std::tuple_size<typename std::decay<Tuple>::type>::value
             >;
     }
+    //! \endcond
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <bool Value>
@@ -317,8 +326,10 @@ namespace eggs { namespace tupleware
             constexpr explicit noexcept_bool() noexcept(Value) {}
         };
     }
+    //! \endcond
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         struct sequencer
@@ -327,8 +338,10 @@ namespace eggs { namespace tupleware
             constexpr explicit sequencer(T const&...) noexcept {}
         };
     }
+    //! \endcond
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <typename T, bool Value = false>
@@ -337,6 +350,7 @@ namespace eggs { namespace tupleware
             static constexpr bool const value = Value;
         };
     }
+    //! \endcond
 
     ///////////////////////////////////////////////////////////////////////////
 #   define EGGS_TUPLEWARE_AUTO_RETURN(...)                                    \

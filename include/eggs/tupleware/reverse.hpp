@@ -1,6 +1,6 @@
 //! \file eggs/tupleware/reverse.hpp
 // Eggs.Tupleware
-// 
+//
 // Copyright Agustin K-ballo Berge, Fusion Fenix 2014
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -23,6 +23,7 @@ namespace eggs { namespace tupleware
 {
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <
@@ -51,6 +52,7 @@ namespace eggs { namespace tupleware
                     >;
             };
         }
+        //! \endcond
 
         template <typename Tuple>
         struct reverse
@@ -60,12 +62,12 @@ namespace eggs { namespace tupleware
             >
         {
         private:
-            friend tupleware::detail::access;
             Tuple _base;
         };
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <
@@ -98,6 +100,7 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::reverse
         );
     }
+    //! \endcond
 
     namespace result_of
     {

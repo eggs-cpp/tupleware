@@ -23,6 +23,7 @@ namespace eggs { namespace tupleware
 {
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <
@@ -49,6 +50,7 @@ namespace eggs { namespace tupleware
                     >;
             };
         }
+        //! \endcond
 
         template <typename Tuple, typename UnaryMetaFunction>
         struct transform
@@ -60,6 +62,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <
@@ -89,6 +92,7 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::transform
         );
     }
+    //! \endcond
 
     namespace result_of
     {
@@ -133,7 +137,7 @@ namespace eggs { namespace tupleware
     >::type transform(Tuple&& /*tuple*/, UnaryFunction&& /*f*/)
     {
         static_assert(
-            result_of::is_tuple<Tuple>::value
+            result_of::is_tuple_t<Tuple>::value
           , "'tuple' argument is not a Tuple");
 
         static_assert(

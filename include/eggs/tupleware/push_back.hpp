@@ -21,6 +21,7 @@ namespace eggs { namespace tupleware
 {
     namespace meta
     {
+        //! \cond DETAIL
         namespace detail
         {
             template <
@@ -79,6 +80,7 @@ namespace eggs { namespace tupleware
                     >;
             };
         }
+        //! \endcond
 
         template <typename Tuple, typename Value, typename Expand = void>
         struct push_back
@@ -99,6 +101,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     namespace detail
     {
         template <
@@ -157,6 +160,7 @@ namespace eggs { namespace tupleware
           , ::eggs::tupleware::detail::push_back
         );
     }
+    //! \endcond
 
     namespace result_of
     {
