@@ -182,6 +182,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     template <std::size_t I, typename Tuple>
     typename tupleware::detail::enable_if_failure<
         result_of::at<I, Tuple>
@@ -195,6 +196,7 @@ namespace eggs { namespace tupleware
             I < result_of::size_t<Tuple>::value
           , "'I' argument is out of bounds");
     }
+    //! \endcond
 }}
 
 #endif /*EGGS_TUPLEWARE_AT_HPP*/

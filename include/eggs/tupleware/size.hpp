@@ -122,13 +122,13 @@ namespace eggs { namespace tupleware
     //!
     //! \tparam Tuple A type that is queried for its number of elements.
     //!
+    //! \requires The type `Tuple` shall support the \ref tuple_protocol.
+    //!
     //! \returns An instance of `std::integral_constant<std::size_t, Value>`
     //! where `Value` is the number of elements in the type `Tuple`.
     //!
     //! \remarks Equivalent to
     //! `typename meta::tuple_size<typename std::decay<T>::type>::type{}`
-    //!
-    //! \requires The type `Tuple` shall support the \ref tuple_protocol.
     //!
     //! \see \link meta::size \endlink,
     //!      \link size(Tuple const&) \endlink,
@@ -147,13 +147,13 @@ namespace eggs { namespace tupleware
     //! \param tuple An object whose type is queried for its number of
     //! elements.
     //!
+    //! \requires The type of `tuple` shall support the \ref tuple_protocol.
+    //!
     //! \returns An instance of `std::integral_constant<std::size_t, Value>`
     //! where `Value` is the number of elements in the type of `tuple`.
     //!
     //! \remarks Equivalent to
     //! `typename meta::tuple_size<typename std::decay<decltype(value)>::type>::type{}`
-    //!
-    //! \requires The type of `tuple` shall support the \ref tuple_protocol.
     //!
     //! \see \link meta::size \endlink,
     //!      \link size() \endlink,
@@ -191,8 +191,9 @@ namespace eggs { namespace tupleware
             )
         };
     }
-
+    
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     template <typename Tuple>
     typename tupleware::detail::enable_if_failure<
         result_of::size<Tuple>
@@ -202,6 +203,7 @@ namespace eggs { namespace tupleware
             result_of::is_tuple_t<Tuple>::value
           , "'tuple' argument is not a Tuple");
     }
+    //! \endcond
 }}
 
 #endif /*EGGS_TUPLEWARE_SIZE_HPP*/

@@ -1,6 +1,6 @@
 //! \file eggs/tupleware/emplace_back.hpp
 // Eggs.Tupleware
-// 
+//
 // Copyright Agustin K-ballo Berge, Fusion Fenix 2014
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -104,6 +104,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     template <typename T, typename Tuple, typename ...Args>
     typename tupleware::detail::enable_if_failure<
         result_of::emplace_back<T, Tuple, Args...>
@@ -119,6 +120,7 @@ namespace eggs { namespace tupleware
             >::value
           , "invalid emplace_back");
     }
+    //! \endcond
 }}
 
 #endif /*EGGS_TUPLEWARE_EMPLACE_BACK_HPP*/

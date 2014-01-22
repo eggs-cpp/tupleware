@@ -1,6 +1,6 @@
 //! \file eggs/tupleware/insert.hpp
 // Eggs.Tupleware
-// 
+//
 // Copyright Agustin K-ballo Berge, Fusion Fenix 2014
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -268,6 +268,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     template <std::size_t Where, typename Tuple, typename Value>
     typename tupleware::detail::enable_if_failure<
         result_of::insert<Where, Tuple, Value>
@@ -311,6 +312,7 @@ namespace eggs { namespace tupleware
             >::value
           , "invalid insert");
     }
+    //! \endcond
 }}
 
 #endif /*EGGS_TUPLEWARE_INSERT_HPP*/

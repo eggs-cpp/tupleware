@@ -137,6 +137,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     template <typename Tuple>
     typename tupleware::detail::enable_if_failure<
         result_of::reverse<Tuple>
@@ -146,6 +147,7 @@ namespace eggs { namespace tupleware
             result_of::is_tuple_t<Tuple>::value
           , "'tuple' argument is not a Tuple");
     }
+    //! \endcond
 }}
 
 namespace std

@@ -1,6 +1,6 @@
 //! \file eggs/tupleware/push_front.hpp
 // Eggs.Tupleware
-// 
+//
 // Copyright Agustin K-ballo Berge, Fusion Fenix 2014
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -222,6 +222,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     template <typename Tuple, typename Value>
     typename tupleware::detail::enable_if_failure<
         result_of::push_front<Tuple, Value>
@@ -257,6 +258,7 @@ namespace eggs { namespace tupleware
             >::value
           , "invalid push_front");
     }
+    //! \endcond
 }}
 
 #endif /*EGGS_TUPLEWARE_PUSH_FRONT_HPP*/
