@@ -58,8 +58,7 @@ namespace eggs { namespace tupleware
         //! \requires The type `Tuple` shall support the \ref tuple_protocol.
         //! The index `I` shall be within the bounds of `Tuple`.
         //!
-        //! \see \link meta::at \endlink,
-        //!      \link at<I>(Tuple&&) \endlink,
+        //! \see \link at<I>(Tuple&&) \endlink,
         //!      \link result_of::at \endlink,
         //!      \link result_of::at_t \endlink,
         //!      \link functional::at \endlink

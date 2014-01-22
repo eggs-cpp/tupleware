@@ -105,8 +105,8 @@ namespace eggs { namespace tupleware
         //! \see \link meta::is_tuple \endlink,
         //!      \link is_tuple() \endlink,
         //!      \link is_tuple(T&&) \endlink,
-        //!      \link result_of::is_tuple \endlink
-        //!      \link functional::is_tuple \endlink,
+        //!      \link result_of::is_tuple \endlink,
+        //!      \link functional::is_tuple \endlink
         template <typename T>
         using is_tuple_t =
             typename is_tuple<T>::type;
@@ -167,8 +167,8 @@ namespace eggs { namespace tupleware
         //! \see \link meta::is_tuple \endlink,
         //!      \link is_tuple() \endlink,
         //!      \link is_tuple(T&&) \endlink,
-        //!      \link result_of::is_tuple \endlink
-        //!      \link result_of::is_tuple_t \endlink,
+        //!      \link result_of::is_tuple \endlink,
+        //!      \link result_of::is_tuple_t \endlink
         struct is_tuple
         {
             //! \copydoc is_tuple(T&&)
