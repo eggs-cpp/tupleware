@@ -13,48 +13,69 @@
 #include <tuple>
 #include <type_traits>
 
-//! \page tuple_protocol tuple-like protocol
-//!
-//! The `tuple`-like protocol is a set of standard traits and function
-//! overloads that allow operating on a type that is not `std::tuple<...>`,
-//! but can conform to its access interface. Examples of such types are
-//! `std::pair<T, U>` and `std::array<N, T>`.
-//!
-//! In order for a type `T` to support the `tuple`-like protocol, it has to
-//! meet the following requirements:
-//!
-//! - Provide a specialization of [`std::tuple_size<T>`]
-//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_size) with a
-//! BaseCharacteristic of `std::integral_constant<Integral, Value>` where
-//! `Value` is an instance of type `Integral` representing the number of
-//! elements in `T`. Specializations for _cv-qualified_ `T`s forwarding to
-//! the base trait are provided by the Standard Library.
-//!
-//! - Provide a specialization of [`std::tuple_element<I, T>`]
-//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_element) with a
-//! nested typedef `type` naming the `I`th element of `T`, where indexing is
-//! zero based. Specializations for _cv-qualified_ `T`s forwarding to
-//! the base trait are provided by the Standard Library.
-//!
-//! - Provide overloads of [`std::get<I>`]
-//! (http://en.cppreference.com/w/cpp/utility/tuple/get) where:
-//!
-//!   + `std::get<I>(T& t)` returns a reference to the `I`th element of `t`,
-//!     where indexing is zero-based.
-//!
-//!   + `std::get<I>(T&& t)` is equivalent to
-//!     `return std::forward<TI>(get<I>(t))` with `TI` being the `I`th element
-//!     of `T`, where indexing is zero-based.
-//!
-//!   + `std::get<I>(T const& t)` returns a const reference to the `I`th
-//!     element of `t`, where indexing is zero-based.
-//!
-//! \note The specializations and overloads required by this protocol must be
-//! visible at the point of instantiation of any of the structs and functions
-//! of this library.
-
 namespace eggs { namespace tupleware
 {
+    //! \page tuple_protocol tuple-like protocol
+    //!
+    //! The `tuple`-like protocol is a set of standard traits and function
+    //! overloads that allow operating on a type that is not `std::tuple<...>`,
+    //! but can conform to its access interface. Examples of such types are
+    //! `std::pair<T, U>` and `std::array<N, T>`.
+    //!
+    //! In order for a type `T` to support the `tuple`-like protocol, it has to
+    //! meet the following requirements:
+    //!
+    //! - Provide a specialization of [`std::tuple_size<T>`]
+    //! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_size) with a
+    //! BaseCharacteristic of `std::integral_constant<Integral, Value>` where
+    //! `Value` is an instance of type `Integral` representing the number of
+    //! elements in `T`. Specializations for _cv-qualified_ `T`s forwarding to
+    //! the base trait are provided by the Standard Library.
+    //!
+    //! - Provide a specialization of [`std::tuple_element<I, T>`]
+    //! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_element) with a
+    //! nested typedef `type` naming the `I`th element of `T`, where indexing
+    //! is zero based. Specializations for _cv-qualified_ `T`s forwarding to
+    //! the base trait are provided by the Standard Library.
+    //!
+    //! - Provide overloads of [`std::get<I>`]
+    //! (http://en.cppreference.com/w/cpp/utility/tuple/get) where:
+    //!
+    //!   + `std::get<I>(T& t)` returns a reference to the `I`th element of `t`,
+    //!     where indexing is zero-based.
+    //!
+    //!   + `std::get<I>(T&& t)` is equivalent to
+    //!     `return std::forward<TI>(get<I>(t))` with `TI` being the `I`th
+    //!     element of `T`, where indexing is zero-based.
+    //!
+    //!   + `std::get<I>(T const& t)` returns a const reference to the `I`th
+    //!     element of `t`, where indexing is zero-based.
+    //!
+    //! \note The specializations and overloads required by this protocol must
+    //! be visible at the point of instantiation of any of the structs and
+    //! functions of this library.
+    ///////////////////////////////////////////////////////////////////////////
+    using std::tuple;
+
+    using std::make_tuple;
+    using std::tie;
+    using std::forward_as_tuple;
+
+    ///////////////////////////////////////////////////////////////////////////
+    struct expand_tuple_t {};
+
+    namespace meta
+    {
+        using expand_tuple = expand_tuple_t;
+    }
+
+    static constexpr expand_tuple_t expand_tuple = {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename ...T>
+    struct pack
+    {};
+
     ///////////////////////////////////////////////////////////////////////////
     namespace meta
     {
@@ -94,11 +115,70 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     namespace meta
     {
+        template <typename Function>
+        struct function
+          : Function
+        {};
+    }
+    
+    //! \page placeholder_expresion placeholder expression
+    //!
+    //! A placeholder expression is a type that is either a placeholder or a 
+    //! class template specialization with at least one argument that itself is
+    //! a placeholder expression.
+    //!
+    //! If `X` is a class template, and `A1, ..., An` are arbitrary types, then
+    //! `X<A1, ..., An>` is a placeholder expression if and only if all of the 
+    //! following conditions hold:
+    //! 
+    //! - At least one of the template arguments `A1, ..., An` is a placeholder
+    //!   or a placeholder expression.
+    //! 
+    //! - All of `X`'s template parameters, including the default ones, are 
+    //!   types.
+    ///////////////////////////////////////////////////////////////////////////
+    namespace meta
+    {
         //! \cond DETAIL
         namespace detail
         {
             template <std::size_t I>
             struct placeholder {};
+
+            ///////////////////////////////////////////////////////////////////
+            template <typename T>
+            void _is_placeholder_expression_join(T const&...) noexcept;
+
+            template <typename T>
+            struct is_placeholder_expression
+              : std::false_type
+            {
+                constexpr is_placeholder_expression()
+                    noexcept(true)
+                {}
+            };
+
+            template <std::size_t I>
+            struct is_placeholder_expression<placeholder<I>>
+              : std::true_type
+            {
+                constexpr is_placeholder_expression()
+                    noexcept(false)
+                {}
+            };
+
+            template <template <typename...> class Template, typename ...T>
+            struct is_placeholder_expression<Template<T...>>
+              : std::integral_constant<
+                    bool
+                  , !noexcept(_is_placeholder_expression_join(
+                        is_placeholder_expression<T>{}...))
+                >
+            {
+                constexpr is_placeholder_expression()
+                    noexcept(noexcept(_is_placeholder_expression_join(
+                        is_placeholder_expression<T>{}...)));
+            };
         }
         //! \endcond
 
@@ -117,28 +197,6 @@ namespace eggs { namespace tupleware
         }
         using namespace placeholders;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    struct expand_tuple_t {};
-
-    namespace meta
-    {
-        using expand_tuple = expand_tuple_t;
-    }
-
-    static constexpr expand_tuple_t expand_tuple = {};
-
-    ///////////////////////////////////////////////////////////////////////////
-    template <typename ...T>
-    struct pack
-    {};
-
-    ///////////////////////////////////////////////////////////////////////////
-    using std::tuple;
-
-    using std::make_tuple;
-    using std::tie;
-    using std::forward_as_tuple;
 
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
