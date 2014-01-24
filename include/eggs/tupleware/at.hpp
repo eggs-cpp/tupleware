@@ -38,9 +38,12 @@ namespace eggs { namespace tupleware
             struct at_impl<
                 I, Tuple
               , typename std::enable_if<
-                    (I < std::tuple_size<Tuple>::value)
+                    (I < extension::tuple<Tuple>::size)
                 >::type
-            > : identity<typename std::tuple_element<I, Tuple>::type>
+            > : identity<
+                    typename extension::tuple<Tuple>::
+                        template element<I>::type
+                >
             {};
         }
         //! \endcond
@@ -82,7 +85,8 @@ namespace eggs { namespace tupleware
         >
         constexpr auto at(meta::size_t<I>, Tuple&& tuple)
         EGGS_TUPLEWARE_AUTO_RETURN(
-            std::get<I>(std::forward<Tuple>(tuple))
+            extension::tuple<typename std::decay<Tuple>::type>::
+                template element<I>::get(std::forward<Tuple>(tuple))
         )
 
         ///////////////////////////////////////////////////////////////////////

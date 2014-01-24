@@ -37,11 +37,11 @@ namespace eggs { namespace tupleware
             struct size_impl<
                 Tuple
               , typename std::enable_if<
-                    (std::tuple_size<Tuple>::value >= 0)
+                    (extension::tuple<Tuple>::size >= 0)
                 >::type
             > : std::integral_constant<
                     std::size_t
-                  , std::tuple_size<Tuple>::value
+                  , extension::tuple<Tuple>::size
                 >
             {};
         }
@@ -191,7 +191,7 @@ namespace eggs { namespace tupleware
             )
         };
     }
-    
+
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <typename Tuple>

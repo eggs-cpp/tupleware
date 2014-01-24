@@ -70,16 +70,17 @@ namespace eggs { namespace tupleware
         }
         //! \endcond
 
-        //! \brief
+        //! \brief Invokes a \ref placeholder_expression with the given
+        //! arguments
         //!
         //! \see \link invoke(F&&, Args&&...) \endlink,
         //!      \link invoke(F&&, expand_tuple_t, Args&&) \endlink,
         //!      \link result_of::invoke \endlink,
         //!      \link result_of::invoke_t \endlink,
         //!      \link functional::invoke \endlink
-        template <typename Expression, typename ...Args>
+        template <typename LambdaExpression, typename ...Args>
         struct invoke
-          : detail::invoke_impl<Expression, pack<Args...>>
+          : detail::invoke_impl<LambdaExpression, pack<Args...>>
         {};
     }
 
@@ -227,7 +228,7 @@ namespace eggs { namespace tupleware
             typename invoke<F, Args...>::type;
     }
 
-    //! \brief Invokes a callable with the arguments given
+    //! \brief Invokes a callable with the given arguments
     //!
     //! \details
     //!

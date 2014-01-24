@@ -36,7 +36,7 @@ namespace eggs { namespace tupleware
             struct is_tuple_impl<
                 T
               , typename std::enable_if<
-                    (std::tuple_size<T>::value >= 0)
+                    (extension::tuple<T>::size >= 0)
                 >::type
             > : std::true_type
             {};
