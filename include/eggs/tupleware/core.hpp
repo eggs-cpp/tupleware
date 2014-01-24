@@ -13,48 +13,130 @@
 #include <tuple>
 #include <type_traits>
 
-//! \page tuple_protocol tuple-like protocol
-//!
-//! The `tuple`-like protocol is a set of standard traits and function
-//! overloads that allow operating on a type that is not `std::tuple<...>`,
-//! but can conform to its access interface. Examples of such types are
-//! `std::pair<T, U>` and `std::array<N, T>`.
-//!
-//! In order for a type `T` to support the `tuple`-like protocol, it has to
-//! meet the following requirements:
-//!
-//! - Provide a specialization of [`std::tuple_size<T>`]
-//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_size) with a
-//! BaseCharacteristic of `std::integral_constant<Integral, Value>` where
-//! `Value` is an instance of type `Integral` representing the number of
-//! elements in `T`. Specializations for _cv-qualified_ `T`s forwarding to
-//! the base trait are provided by the Standard Library.
-//!
-//! - Provide a specialization of [`std::tuple_element<I, T>`]
-//! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_element) with a
-//! nested typedef `type` naming the `I`th element of `T`, where indexing is
-//! zero based. Specializations for _cv-qualified_ `T`s forwarding to
-//! the base trait are provided by the Standard Library.
-//!
-//! - Provide overloads of [`std::get<I>`]
-//! (http://en.cppreference.com/w/cpp/utility/tuple/get) where:
-//!
-//!   + `std::get<I>(T& t)` returns a reference to the `I`th element of `t`,
-//!     where indexing is zero-based.
-//!
-//!   + `std::get<I>(T&& t)` is equivalent to
-//!     `return std::forward<TI>(get<I>(t))` with `TI` being the `I`th element
-//!     of `T`, where indexing is zero-based.
-//!
-//!   + `std::get<I>(T const& t)` returns a const reference to the `I`th
-//!     element of `t`, where indexing is zero-based.
-//!
-//! \note The specializations and overloads required by this protocol must be
-//! visible at the point of instantiation of any of the structs and functions
-//! of this library.
-
 namespace eggs { namespace tupleware
 {
+    //! \page tuple_protocol tuple-like protocol
+    //!
+    //! The `tuple`-like protocol is a concept introduced by the standard
+    //! library to refer to fixed-size heterogeneous containers like `tuple`,
+    //! but not formally defined nor supported. The only types conforming to
+    //! the `tuple`-like protocol are `std::tuple<Ts...>`, `std::pair<T, U>`
+    //! and `std::array<N, T>`. In order for a type `T` to support the
+    //! `tuple`-like protocol, it has to meet the following requirements:
+    //!
+    //! - Provide a specialization of [`std::tuple_size<T>`]
+    //! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_size) with a
+    //! BaseCharacteristic of `std::integral_constant<Integral, Value>` where
+    //! `Value` is an instance of type `Integral` representing the number of
+    //! elements in `T`. Specializations for _cv-qualified_ `T`s forwarding to
+    //! the base trait are provided by the Standard Library.
+    //!
+    //! - Provide a specialization of [`std::tuple_element<I, T>`]
+    //! (http://en.cppreference.com/w/cpp/utility/tuple/tuple_element) with a
+    //! nested typedef `type` naming the `I`th element of `T`, where indexing
+    //! is zero based. Specializations for _cv-qualified_ `T`s forwarding to
+    //! the base trait are provided by the Standard Library.
+    //!
+    //! - Provide overloads of [`std::get<I>`]
+    //! (http://en.cppreference.com/w/cpp/utility/tuple/get) where:
+    //!
+    //!   + `std::get<I>(T& t)` returns a reference to the `I`th element of `t`,
+    //!     where indexing is zero-based.
+    //!
+    //!   + `std::get<I>(T&& t)` is equivalent to
+    //!     `return std::forward<TI>(get<I>(t))` with `TI` being the `I`th
+    //!     element of `T`, where indexing is zero-based.
+    //!
+    //!   + `std::get<I>(T const& t)` returns a const reference to the `I`th
+    //!     element of `t`, where indexing is zero-based.
+    //!
+    //! The rules governing the `std` namespace prevent any user-defined type
+    //! from fulfilling the `tuple`-like protocol. This library provides an
+    //! alternative extension point for that purpose:
+    //! \ref extension::tuple.
+    ///////////////////////////////////////////////////////////////////////////
+    namespace extension
+    {
+        //! \brief Extension point for types willing to participate in the
+        //! \ref tuple_protocol
+        //!
+        //! \details A type `T` willing to participate in the
+        //! \ref tuple_protocol shall provide a specialization of this template
+        //! providing:
+        //!
+        //! - `static constexpr bool size;` representing the number of elements
+        //!   in `T`,
+        //!
+        //! - `template <std::size_t I> struct element;` such that for each
+        //!   `I < size`:
+        //!
+        //!   + `type` is an alias to the type of the `I`th element of `T`,
+        //!      where indexing is zero-based,
+        //!
+        //!   + `static constexpr type& get(T& t) noexcept`,
+        //!     `static constexpr type&& get(T&& t) noexcept`, and
+        //!     `static constexpr type const& get(T const& t) noexcept` return
+        //!     an appropriate reference to the `I`th element of `t`, where
+        //!     indexing is zero-based.
+        template <typename T, typename Enable = void>
+        struct tuple;
+
+        //! \cond DETAIL
+        template <typename Tuple>
+        struct tuple<
+            Tuple
+          , typename std::enable_if<(std::tuple_size<Tuple>::value >= 0)>::type
+        >
+        {
+            static constexpr std::size_t size =
+                std::tuple_size<Tuple>::value;
+
+            template <std::size_t I>
+            struct element
+            {
+                using type =
+                    typename std::tuple_element<I, Tuple>::type;
+
+                static constexpr type& get(Tuple& tuple) noexcept
+                {
+                    return std::get<I>(tuple);
+                }
+
+                static constexpr type&& get(Tuple&& tuple) noexcept
+                {
+                    return std::get<I>(std::move(tuple));
+                }
+
+                static constexpr type const& get(Tuple const& tuple) noexcept
+                {
+                    return std::get<I>(tuple);
+                }
+            };
+        };
+        //! \endcond
+    }
+
+    using std::tuple;
+
+    using std::make_tuple;
+    using std::tie;
+    using std::forward_as_tuple;
+
+    ///////////////////////////////////////////////////////////////////////////
+    struct expand_tuple_t {};
+
+    namespace meta
+    {
+        using expand_tuple = expand_tuple_t;
+    }
+
+    static constexpr expand_tuple_t expand_tuple = {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename ...T>
+    struct pack
+    {};
+
     ///////////////////////////////////////////////////////////////////////////
     namespace meta
     {
@@ -117,28 +199,6 @@ namespace eggs { namespace tupleware
         }
         using namespace placeholders;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    struct expand_tuple_t {};
-
-    namespace meta
-    {
-        using expand_tuple = expand_tuple_t;
-    }
-
-    static constexpr expand_tuple_t expand_tuple = {};
-
-    ///////////////////////////////////////////////////////////////////////////
-    template <typename ...T>
-    struct pack
-    {};
-
-    ///////////////////////////////////////////////////////////////////////////
-    using std::tuple;
-
-    using std::make_tuple;
-    using std::tie;
-    using std::forward_as_tuple;
 
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL

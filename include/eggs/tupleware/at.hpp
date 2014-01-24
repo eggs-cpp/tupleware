@@ -38,9 +38,12 @@ namespace eggs { namespace tupleware
             struct at_impl<
                 I, Tuple
               , typename std::enable_if<
-                    (I < std::tuple_size<Tuple>::value)
+                    (I < extension::tuple<Tuple>::size)
                 >::type
-            > : identity<typename std::tuple_element<I, Tuple>::type>
+            > : identity<
+                    typename extension::tuple<Tuple>::
+                        template element<I>::type
+                >
             {};
         }
         //! \endcond
@@ -58,8 +61,7 @@ namespace eggs { namespace tupleware
         //! \requires The type `Tuple` shall support the \ref tuple_protocol.
         //! The index `I` shall be within the bounds of `Tuple`.
         //!
-        //! \see \link meta::at \endlink,
-        //!      \link at<I>(Tuple&&) \endlink,
+        //! \see \link at<I>(Tuple&&) \endlink,
         //!      \link result_of::at \endlink,
         //!      \link result_of::at_t \endlink,
         //!      \link functional::at \endlink
@@ -83,7 +85,8 @@ namespace eggs { namespace tupleware
         >
         constexpr auto at(meta::size_t<I>, Tuple&& tuple)
         EGGS_TUPLEWARE_AUTO_RETURN(
-            std::get<I>(std::forward<Tuple>(tuple))
+            extension::tuple<typename std::decay<Tuple>::type>::
+                template element<I>::get(std::forward<Tuple>(tuple))
         )
 
         ///////////////////////////////////////////////////////////////////////
@@ -183,6 +186,7 @@ namespace eggs { namespace tupleware
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
     template <std::size_t I, typename Tuple>
     typename tupleware::detail::enable_if_failure<
         result_of::at<I, Tuple>
@@ -196,6 +200,7 @@ namespace eggs { namespace tupleware
             I < result_of::size_t<Tuple>::value
           , "'I' argument is out of bounds");
     }
+    //! \endcond
 }}
 
 #endif /*EGGS_TUPLEWARE_AT_HPP*/
