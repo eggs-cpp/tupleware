@@ -1,4 +1,7 @@
-// Copyright (c) 2014 Agustin K-ballo Berge
+//! \file eggs/tupleware/is_tuple.hpp
+// Eggs.Tupleware
+//
+// Copyright Agustin K-ballo Berge, Fusion Fenix 2014
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,42 +10,12 @@
 #define EGGS_TUPLEWARE_IS_TUPLE_HPP
 
 #include <eggs/tupleware/core.hpp>
-
-#include <tuple>
-#include <type_traits>
-#include <utility>
+#include <eggs/tupleware/detail/is_tuple.hpp>
 
 namespace eggs { namespace tupleware
 {
     namespace meta
     {
-        //! \cond DETAIL
-        namespace detail
-        {
-            template <
-                typename T
-              , typename Enable = void
-            >
-            struct is_tuple_impl
-              : std::false_type
-            {};
-
-            template <typename T>
-            struct is_tuple_impl<T const>
-              : std::false_type
-            {};
-
-            template <typename T>
-            struct is_tuple_impl<
-                T
-              , typename std::enable_if<
-                    (extension::tuple<T>::size >= 0)
-                >::type
-            > : std::true_type
-            {};
-        }
-        //! \endcond
-
         //! \brief Whether the type `T` supports the \ref tuple_protocol
         //!
         //! \details Has a BaseCharacteristic of `std::true_type` if the type
@@ -58,28 +31,11 @@ namespace eggs { namespace tupleware
         //!      \link functional::is_tuple \endlink
         template <typename T>
         struct is_tuple
-          : detail::is_tuple_impl<T>
+          : detail::meta::is_tuple<T>
         {};
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <typename T>
-        constexpr auto is_tuple(meta::identity<T>)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            typename meta::is_tuple<typename std::decay<T>::type>::type{}
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_is_tuple
-          , ::eggs::tupleware::detail::is_tuple
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         //! \brief Result type of an invocation of \ref is_tuple(T&&)
@@ -95,9 +51,9 @@ namespace eggs { namespace tupleware
         //!      \link functional::is_tuple \endlink
         template <typename T>
         struct is_tuple
-          : detail::_result_of_is_tuple<pack<
+          : detail::_result_of_is_tuple<
                 meta::identity<T>
-            >>
+            >
         {};
 
         //! \brief Alias for \link result_of::is_tuple \endlink

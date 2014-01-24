@@ -9,98 +9,27 @@
 #ifndef EGGS_TUPLEWARE_TRANSFORM_HPP
 #define EGGS_TUPLEWARE_TRANSFORM_HPP
 
-#include <eggs/tupleware/at.hpp>
 #include <eggs/tupleware/core.hpp>
-#include <eggs/tupleware/invoke.hpp>
-#include <eggs/tupleware/is_tuple.hpp>
-
-#include <cstddef>
-#include <tuple>
-#include <type_traits>
-#include <utility>
+#include <eggs/tupleware/detail/transform.hpp>
 
 namespace eggs { namespace tupleware
 {
     namespace meta
     {
-        //! \cond DETAIL
-        namespace detail
-        {
-            template <
-                typename Is
-              , typename Tuple, typename F
-              , typename Enable = void
-            >
-            struct transform_impl
-            {};
-
-            template <
-                std::size_t ...Is
-              , typename Tuple, typename F
-            >
-            struct transform_impl<
-                tupleware::detail::index_sequence<Is...>
-              , Tuple, F
-              , typename std::enable_if<is_tuple<Tuple>::value>::type
-            >
-            {
-                using type =
-                    tupleware::tuple<
-                        typename invoke<F, typename at<Is, Tuple>::type>::type...
-                    >;
-            };
-        }
-        //! \endcond
-
         template <typename Tuple, typename UnaryMetaFunction>
         struct transform
-          : detail::transform_impl<
-                tupleware::detail::index_sequence_for_tuple<Tuple>
-              , Tuple, UnaryMetaFunction
-            >
+          : detail::meta::transform<Tuple, UnaryMetaFunction>
         {};
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <
-            std::size_t ...Is
-          , typename Tuple, typename F
-        >
-        constexpr auto transform_impl(
-            index_sequence<Is...>
-          , Tuple&& tuple, F& f)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            tupleware::tuple<decltype(
-                invoke(f, at(meta::size_t<Is>{}, std::forward<Tuple>(tuple))))...
-            >{invoke(f, at(meta::size_t<Is>{}, std::forward<Tuple>(tuple)))...}
-        )
-
-        template <typename Tuple, typename F>
-        constexpr auto transform(Tuple&& tuple, F f)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            transform_impl(
-                index_sequence_for_tuple<Tuple>{}
-              , std::forward<Tuple>(tuple), f)
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_transform
-          , ::eggs::tupleware::detail::transform
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         template <typename Tuple, typename UnaryFunction>
         struct transform
-          : detail::_result_of_transform<pack<
+          : detail::_result_of_transform<
                 Tuple, UnaryFunction
-            >>
+            >
         {};
 
         template <typename Tuple, typename UnaryFunction>
@@ -133,19 +62,12 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <typename Tuple, typename UnaryFunction>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::transform<Tuple, UnaryFunction>
-    >::type transform(Tuple&& /*tuple*/, UnaryFunction&& /*f*/)
+    >::type transform(Tuple&& tuple, UnaryFunction&& f)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
-
-        static_assert(
-            tupleware::detail::inject_context<
-                result_of::transform<Tuple, UnaryFunction>
-            >::value
-          , "ill-formed invoke expression");
+        detail::_explain_transform(
+            std::forward<Tuple>(tuple), std::forward<UnaryFunction>(f));
     }
     //! \endcond
 }}

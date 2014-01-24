@@ -9,57 +9,18 @@
 #ifndef EGGS_TUPLEWARE_FOR_EACH_HPP
 #define EGGS_TUPLEWARE_FOR_EACH_HPP
 
-#include <eggs/tupleware/at.hpp>
 #include <eggs/tupleware/core.hpp>
-#include <eggs/tupleware/invoke.hpp>
-#include <eggs/tupleware/is_tuple.hpp>
-
-#include <cstddef>
-#include <utility>
+#include <eggs/tupleware/detail/for_each.hpp>
 
 namespace eggs { namespace tupleware
 {
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <
-            std::size_t ...Is
-          , typename Tuple, typename F
-        >
-        constexpr auto for_each_impl(
-            index_sequence<Is...>
-          , Tuple&& tuple, F& f)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            sequencer{
-                (invoke(
-                    f
-                  , at(meta::size_t<Is>{}, std::forward<Tuple>(tuple))), 0)...}
-              , std::move(f)
-        )
-
-        template <typename Tuple, typename F>
-        constexpr auto for_each(Tuple&& tuple, F f)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            for_each_impl(
-                index_sequence_for_tuple<Tuple>{}
-              , std::forward<Tuple>(tuple), f)
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_for_each
-          , ::eggs::tupleware::detail::for_each
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         template <typename Tuple, typename UnaryFunction>
         struct for_each
-          : detail::_result_of_for_each<pack<
+          : detail::_result_of_for_each<
                 Tuple, UnaryFunction
-            >>
+            >
         {};
 
         template <typename Tuple, typename UnaryFunction>
@@ -92,19 +53,12 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <typename Tuple, typename UnaryFunction>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::for_each<Tuple, UnaryFunction>
-    >::type for_each(Tuple&& /*tuple*/, UnaryFunction&& /*f*/)
+    >::type for_each(Tuple&& tuple, UnaryFunction&& f)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
-
-        static_assert(
-            tupleware::detail::inject_context<
-                result_of::for_each<Tuple, UnaryFunction>
-            >::value
-          , "ill-formed invoke expression");
+        detail::_explain_for_each(
+            std::forward<Tuple>(tuple), std::forward<UnaryFunction>(f));
     }
     //! \endcond
 }}

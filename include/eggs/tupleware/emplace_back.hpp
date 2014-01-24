@@ -9,68 +9,19 @@
 #ifndef EGGS_TUPLEWARE_EMPLACE_BACK_HPP
 #define EGGS_TUPLEWARE_EMPLACE_BACK_HPP
 
-#include <eggs/tupleware/at.hpp>
 #include <eggs/tupleware/core.hpp>
-#include <eggs/tupleware/is_tuple.hpp>
-#include <eggs/tupleware/push_back.hpp>
-
-#include <cstddef>
-#include <type_traits>
-#include <utility>
+#include <eggs/tupleware/detail/emplace_back.hpp>
 
 namespace eggs { namespace tupleware
 {
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <
-            typename T
-          , std::size_t ...Is
-          , typename Tuple, typename ...Args
-        >
-        constexpr auto emplace_back_impl(
-            meta::identity<T>
-          , index_sequence<Is...>
-          , Tuple&& tuple, Args&&... args)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            typename meta::push_back<
-                typename std::decay<Tuple>::type
-              , typename std::remove_cv<T>::type
-            >::type{
-                at(meta::size_t<Is>{}, std::forward<Tuple>(tuple))...
-              , T(std::forward<Args>(args)...)}
-        )
-
-        template<
-            typename T
-          , typename Tuple, typename ...Args
-        >
-        constexpr auto emplace_back(
-            meta::identity<T>
-          , Tuple&& tuple, Args&&... args)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            emplace_back_impl(
-                meta::identity<T>{}
-              , index_sequence_for_tuple<Tuple>{}
-              , std::forward<Tuple>(tuple), std::forward<Args>(args)...)
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_emplace_back
-          , ::eggs::tupleware::detail::emplace_back
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         template <typename T, typename Tuple, typename ...Args>
         struct emplace_back
-          : detail::_result_of_emplace_back<pack<
+          : detail::_result_of_emplace_back<
                 meta::identity<T>
               , Tuple, Args...
-            >>
+            >
         {};
 
         template <typename T, typename Tuple, typename ...Args>
@@ -106,19 +57,12 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <typename T, typename Tuple, typename ...Args>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::emplace_back<T, Tuple, Args...>
-    >::type emplace_back(Tuple&& /*tuple*/, Args&&... /*args*/)
+    >::type emplace_back(Tuple&& tuple, Args&&... args)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
-
-        static_assert(
-            tupleware::detail::inject_context<
-                result_of::emplace_back<T, Tuple, Args...>
-            >::value
-          , "invalid emplace_back");
+        detail::_explain_emplace_back<T>(
+            std::forward<Tuple>(tuple), std::forward<Args>(args)...);
     }
     //! \endcond
 }}

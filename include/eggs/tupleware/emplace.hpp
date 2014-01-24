@@ -9,64 +9,11 @@
 #ifndef EGGS_TUPLEWARE_EMPLACE_HPP
 #define EGGS_TUPLEWARE_EMPLACE_HPP
 
-#include <eggs/tupleware/at.hpp>
 #include <eggs/tupleware/core.hpp>
-#include <eggs/tupleware/insert.hpp>
-#include <eggs/tupleware/is_tuple.hpp>
-#include <eggs/tupleware/size.hpp>
-
-#include <cstddef>
-#include <type_traits>
-#include <utility>
+#include <eggs/tupleware/detail/emplace.hpp>
 
 namespace eggs { namespace tupleware
 {
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <
-            typename T
-          , std::size_t ...Is, std::size_t ...Js
-          , typename Tuple, typename ...Args
-        >
-        constexpr auto emplace_impl(
-            meta::identity<T>
-          , index_sequence<Is...>, index_sequence<Js...>
-          , Tuple&& tuple, Args&&... args)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            typename meta::insert<
-                sizeof...(Is)
-              , typename std::decay<Tuple>::type
-              , typename std::remove_cv<T>::type
-            >::type{
-                at(meta::size_t<Is>{}, std::forward<Tuple>(tuple))...
-              , T(std::forward<Args>(args)...)
-              , at(meta::size_t<Js + sizeof...(Is)>{}, std::forward<Tuple>(tuple))...}
-        )
-
-        template <
-            std::size_t Where, typename T
-          , typename Tuple, typename ...Args
-        >
-        constexpr auto emplace(
-            meta::size_t<Where>, meta::identity<T>
-          , Tuple&& tuple, Args&&... args)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            emplace_impl(
-                meta::identity<T>{}
-              , make_index_sequence<Where>{}
-              , make_index_sequence<result_of::size_t<Tuple>::value - Where>{}
-              , std::forward<Tuple>(tuple), std::forward<Args>(args)...)
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_emplace
-          , ::eggs::tupleware::detail::emplace
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         template <
@@ -74,10 +21,10 @@ namespace eggs { namespace tupleware
           , typename Tuple, typename ...Args
         >
         struct emplace
-          : detail::_result_of_emplace<pack<
+          : detail::_result_of_emplace<
                 meta::size_t<Where>, meta::identity<T>
               , Tuple, Args...
-            >>
+            >
         {};
 
         template <
@@ -116,23 +63,12 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <std::size_t Where, typename T, typename Tuple, typename ...Args>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::emplace<Where, T, Tuple, Args...>
-    >::type emplace(Tuple&& /*tuple*/, Args&&... /*args*/)
+    >::type emplace(Tuple&& tuple, Args&&... args)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
-
-        static_assert(
-            Where < result_of::size_t<Tuple>::value
-          , "'Where' argument is out of bounds");
-
-        static_assert(
-            tupleware::detail::inject_context<
-                result_of::emplace<Where, T, Tuple, Args...>
-            >::value
-          , "invalid emplace");
+        detail::_explain_emplace<Where, T>(
+            std::forward<Tuple>(tuple), std::forward<Args>(args)...);
     }
     //! \endcond
 }}

@@ -9,189 +9,26 @@
 #ifndef EGGS_TUPLEWARE_INSERT_HPP
 #define EGGS_TUPLEWARE_INSERT_HPP
 
-#include <eggs/tupleware/at.hpp>
 #include <eggs/tupleware/core.hpp>
-#include <eggs/tupleware/is_tuple.hpp>
-#include <eggs/tupleware/size.hpp>
-
-#include <cstddef>
-#include <type_traits>
-#include <utility>
+#include <eggs/tupleware/detail/insert.hpp>
 
 namespace eggs { namespace tupleware
 {
     namespace meta
     {
-        //! \cond DETAIL
-        namespace detail
-        {
-            template <
-                typename Is, typename Js
-              , typename Tuple, typename Value
-              , typename Enable = void
-            >
-            struct insert_impl
-            {};
-
-            template <
-                std::size_t ...Is, std::size_t ...Js
-              , typename Tuple, typename Value
-            >
-            struct insert_impl<
-                tupleware::detail::index_sequence<Is...>
-              , tupleware::detail::index_sequence<Js...>
-              , Tuple, Value
-              , typename std::enable_if<
-                    is_tuple<Tuple>::value
-                >::type
-            >
-            {
-                using type =
-                    tupleware::tuple<
-                        typename at<Is, Tuple>::type...
-                      , Value
-                      , typename at<Js + sizeof...(Is), Tuple>::type...
-                    >;
-            };
-
-            ///////////////////////////////////////////////////////////////////
-            template <
-                typename Is, typename Js, typename Ks
-              , typename Tuple, typename Value
-              , typename Enable = void
-            >
-            struct insert_expand_impl
-            {};
-
-            template <
-                std::size_t ...Is, std::size_t ...Js, std::size_t ...Ks
-              , typename Tuple, typename Value
-            >
-            struct insert_expand_impl<
-                tupleware::detail::index_sequence<Is...>
-              , tupleware::detail::index_sequence<Js...>
-              , tupleware::detail::index_sequence<Ks...>
-              , Tuple, Value
-              , typename std::enable_if<
-                    is_tuple<Tuple>::value && is_tuple<Value>::value
-                >::type
-            >
-            {
-                using type =
-                    tupleware::tuple<
-                        typename at<Is, Tuple>::type...
-                      , typename at<Ks, Value>::type...
-                      , typename at<Js + sizeof...(Is), Tuple>::type...
-                    >;
-            };
-        }
-        //! \endcond
-
         template <
             std::size_t Where
           , typename Tuple, typename Value, typename Expand = void
         >
         struct insert
-          : detail::insert_impl<
-                tupleware::detail::make_index_sequence<Where>
-              , tupleware::detail::make_index_sequence<size<Tuple>::value - Where>
-              , Tuple, Value
-            >
-        {};
-
-        template <
-            std::size_t Where
-          , typename Tuple, typename Value
-        >
-        struct insert<Where, Tuple, expand_tuple, Value>
-          : detail::insert_expand_impl<
-                tupleware::detail::make_index_sequence<Where>
-              , tupleware::detail::make_index_sequence<size<Tuple>::value - Where>
-              , tupleware::detail::index_sequence_for_tuple<Value>
-              , Tuple, Value
+          : detail::meta::insert<
+                Where
+              , Tuple, Value, Expand
             >
         {};
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <
-            std::size_t ...Is, std::size_t ...Js
-          , typename Tuple, typename Value
-        >
-        constexpr auto insert_impl(
-            index_sequence<Is...>, index_sequence<Js...>
-          , Tuple&& tuple, Value&& value)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            typename meta::insert<
-                sizeof...(Is)
-              , typename std::decay<Tuple>::type
-              , typename detail::decay<Value>::type
-            >::type{
-                at(meta::size_t<Is>{}, std::forward<Tuple>(tuple))...
-              , std::forward<Value>(value)
-              , at(meta::size_t<Js + sizeof...(Is)>{}, std::forward<Tuple>(tuple))...}
-        )
-
-        template <
-            std::size_t Where
-          , typename Tuple, typename Value
-        >
-        constexpr auto insert(
-            meta::size_t<Where>
-          , Tuple&& tuple, Value&& value)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            insert_impl(
-                make_index_sequence<Where>{}
-              , make_index_sequence<result_of::size_t<Tuple>::value - Where>{}
-              , std::forward<Tuple>(tuple), std::forward<Value>(value))
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        template <
-            std::size_t ...Is, std::size_t ...Js, std::size_t ...Ks
-          , typename Tuple, typename Value
-        >
-        constexpr auto insert_expand_impl(
-            index_sequence<Is...>, index_sequence<Js...>
-          , index_sequence<Ks...>
-          , Tuple&& tuple, Value&& value)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            typename meta::insert<
-                sizeof...(Is)
-              , typename std::decay<Tuple>::type
-              , meta::expand_tuple, typename std::decay<Value>::type
-            >::type{
-                at(meta::size_t<Is>{}, std::forward<Tuple>(tuple))...
-              , at(meta::size_t<Ks>{}, std::forward<Value>(value))...
-              , at(meta::size_t<Js + sizeof...(Is)>{}, std::forward<Tuple>(tuple))...}
-        )
-
-        template <
-            std::size_t Where
-          , typename Tuple, typename Value
-        >
-        constexpr auto insert(
-            meta::size_t<Where>
-          , Tuple&& tuple, expand_tuple_t, Value&& value)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            insert_expand_impl(
-                make_index_sequence<Where>{}
-              , make_index_sequence<result_of::size_t<Tuple>::value - Where>{}
-              , index_sequence_for_tuple<Value>{}
-              , std::forward<Tuple>(tuple), std::forward<Value>(value))
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_insert
-          , ::eggs::tupleware::detail::insert
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         template <
@@ -199,10 +36,10 @@ namespace eggs { namespace tupleware
           , typename Tuple, typename Value, typename Expand = void
         >
         struct insert
-          : detail::_result_of_insert<pack<
+          : detail::_result_of_insert<
                 meta::size_t<Where>
               , Tuple, Value, Expand
-            >>
+            >
         {};
 
         template <
@@ -210,10 +47,10 @@ namespace eggs { namespace tupleware
           , typename Tuple, typename Value
         >
         struct insert<Where, Tuple, Value>
-          : detail::_result_of_insert<pack<
+          : detail::_result_of_insert<
                 meta::size_t<Where>
               , Tuple, Value
-            >>
+            >
         {};
 
         template <
@@ -252,7 +89,7 @@ namespace eggs { namespace tupleware
             constexpr result_of::insert_t<Where, Tuple, Value>
             operator()(Tuple&& tuple, Value&& value) const
             EGGS_TUPLEWARE_RETURN(
-                detail::insert(
+                detail::insert<Where>(
                     std::forward<Tuple>(tuple), std::forward<Value>(value))
             )
 
@@ -260,7 +97,7 @@ namespace eggs { namespace tupleware
             constexpr result_of::insert_t<Where, Tuple, expand_tuple_t, Value>
             operator()(Tuple&& tuple, expand_tuple_t, Value&& value) const
             EGGS_TUPLEWARE_RETURN(
-                detail::insert(
+                detail::insert<Where>(
                     std::forward<Tuple>(tuple)
                   , expand_tuple_t{}, std::forward<Value>(value))
             )
@@ -270,47 +107,22 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <std::size_t Where, typename Tuple, typename Value>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::insert<Where, Tuple, Value>
-    >::type insert(Tuple&& /*tuple*/, Value&& /*value*/)
+    >::type insert(Tuple&& tuple, Value&& value)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
-
-        static_assert(
-            Where < result_of::size_t<Tuple>::value
-          , "'Where' argument is out of bounds");
-
-        static_assert(
-            tupleware::detail::inject_context<
-                result_of::insert<Where, Tuple, Value>
-            >::value
-          , "invalid insert");
+        detail::_explain_insert<Where>(
+            std::forward<Tuple>(tuple), std::forward<Value>(value));
     }
 
     template <std::size_t Where, typename Tuple, typename Value>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::insert<Where, Tuple, expand_tuple_t, Value>
-    >::type insert(Tuple&& /*tuple*/, expand_tuple_t, Value&& /*value*/)
+    >::type insert(Tuple&& tuple, expand_tuple_t, Value&& value)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
-
-        static_assert(
-            Where < result_of::size_t<Tuple>::value
-          , "'Where' argument is out of bounds");
-
-        static_assert(
-            result_of::is_tuple_t<Value>::value
-          , "'value' argument is not a Tuple");
-
-        static_assert(
-            tupleware::detail::inject_context<
-                result_of::insert<Where, Tuple, expand_tuple_t, Value>
-            >::value
-          , "invalid insert");
+        detail::_explain_insert<Where>(
+            std::forward<Tuple>(tuple)
+          , expand_tuple_t{}, std::forward<Value>(value));
     }
     //! \endcond
 }}

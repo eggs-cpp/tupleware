@@ -10,43 +10,12 @@
 #define EGGS_TUPLEWARE_SIZE_HPP
 
 #include <eggs/tupleware/core.hpp>
-#include <eggs/tupleware/is_tuple.hpp>
-
-#include <cstddef>
-#include <tuple>
-#include <type_traits>
-#include <utility>
+#include <eggs/tupleware/detail/size.hpp>
 
 namespace eggs { namespace tupleware
 {
     namespace meta
     {
-        //! \cond DETAIL
-        namespace detail
-        {
-            template <
-                typename Tuple
-              , typename Enable = void
-            >
-            struct size_impl;
-
-            template <typename Tuple>
-            struct size_impl<Tuple const>;
-
-            template <typename Tuple>
-            struct size_impl<
-                Tuple
-              , typename std::enable_if<
-                    (extension::tuple<Tuple>::size >= 0)
-                >::type
-            > : std::integral_constant<
-                    std::size_t
-                  , extension::tuple<Tuple>::size
-                >
-            {};
-        }
-        //! \endcond
-
         //! \brief The number of elements in the type `Tuple`
         //!
         //! \details Has a BaseCharacteristic of
@@ -64,28 +33,11 @@ namespace eggs { namespace tupleware
         //!      \link functional::size \endlink
         template <typename Tuple>
         struct size
-          : detail::size_impl<Tuple>
+          : detail::meta::size<Tuple>
         {};
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <typename Tuple>
-        constexpr auto size(meta::identity<Tuple>)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            typename meta::size<typename std::decay<Tuple>::type>::type{}
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_size
-          , ::eggs::tupleware::detail::size
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         //! \brief Result type of an invocation of \ref size(Tuple const&)
@@ -101,9 +53,9 @@ namespace eggs { namespace tupleware
         //!      \link functional::size \endlink
         template <typename Tuple>
         struct size
-          : detail::_result_of_size<pack<
+          : detail::_result_of_size<
                 meta::identity<Tuple>
-            >>
+            >
         {};
 
         //! \brief Alias for \link result_of::size \endlink
@@ -162,7 +114,7 @@ namespace eggs { namespace tupleware
     //!      \link functional::size \endlink
     template <typename Tuple>
     constexpr result_of::size_t<Tuple>
-    size(Tuple const& tuple)
+    size(Tuple&& tuple)
     EGGS_TUPLEWARE_RETURN(
         detail::size(
             (static_cast<void>(tuple), meta::identity<Tuple>{}))
@@ -195,13 +147,11 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <typename Tuple>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::size<Tuple>
-    >::type size(Tuple const& /*tuple*/)
+    >::type size(Tuple const& tuple)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
+        detail::_explain_size(tuple);
     }
     //! \endcond
 }}
