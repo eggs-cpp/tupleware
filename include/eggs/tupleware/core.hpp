@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace eggs { namespace tupleware
 {
@@ -79,7 +80,8 @@ namespace eggs { namespace tupleware
         //!     an appropriate reference to the `I`th element of `t`, where
         //!     indexing is zero-based.
         template <typename T, typename Enable = void>
-        struct tuple;
+        struct tuple
+        {};
 
         //! \cond DETAIL
         template <typename Tuple>
@@ -176,26 +178,85 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     namespace meta
     {
-        //! \cond DETAIL
-        namespace detail
-        {
-            template <std::size_t I>
-            struct placeholder {};
-        }
-        //! \endcond
+        template <typename Function>
+        struct function
+          : Function
+        {};
+    }
 
+    //! \page placeholder_expression placeholder expression
+    //!
+    //! A placeholder expression is a type that is either a placeholder or a
+    //! class template specialization with at least one argument that itself is
+    //! a placeholder expression.
+    //!
+    //! If `X` is a class template, and `A1, ..., An` are arbitrary types, then
+    //! `X<A1, ..., An>` is a placeholder expression if and only if all of the
+    //! following conditions hold:
+    //!
+    //! - At least one of the template arguments `A1, ..., An` is a placeholder
+    //!   or a placeholder expression.
+    //!
+    //! - All of `X`'s template parameters, including the default ones, are
+    //!   types.
+    ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
+    namespace detail { namespace meta
+    {
+        template <std::size_t I>
+        struct placeholder {};
+
+        ///////////////////////////////////////////////////////////////////////
+        template <typename T>
+        void _is_placeholder_expression_join(T const&...) noexcept;
+
+        template <typename T>
+        struct is_placeholder_expression
+          : std::false_type
+        {
+            constexpr is_placeholder_expression()
+                noexcept(true)
+            {}
+        };
+
+        template <std::size_t I>
+        struct is_placeholder_expression<placeholder<I>>
+          : std::true_type
+        {
+            constexpr is_placeholder_expression()
+                noexcept(false)
+            {}
+        };
+
+        template <template <typename...> class Template, typename ...T>
+        struct is_placeholder_expression<Template<T...>>
+          : std::integral_constant<
+                bool
+              , !noexcept(_is_placeholder_expression_join(
+                    is_placeholder_expression<T>{}...))
+            >
+        {
+            constexpr is_placeholder_expression()
+                noexcept(noexcept(_is_placeholder_expression_join(
+                    is_placeholder_expression<T>{}...)));
+        };
+    }}
+    //! \endcond
+
+    namespace meta
+    {
         namespace placeholders
         {
-            using _  = detail::placeholder<0>;
-            using _1 = detail::placeholder<1>;
-            using _2 = detail::placeholder<2>;
-            using _3 = detail::placeholder<3>;
-            using _4 = detail::placeholder<4>;
-            using _5 = detail::placeholder<5>;
-            using _6 = detail::placeholder<6>;
-            using _7 = detail::placeholder<7>;
-            using _8 = detail::placeholder<8>;
-            using _9 = detail::placeholder<9>;
+            using _  = detail::meta::placeholder<0>;
+            using _1 = detail::meta::placeholder<1>;
+            using _2 = detail::meta::placeholder<2>;
+            using _3 = detail::meta::placeholder<3>;
+            using _4 = detail::meta::placeholder<4>;
+            using _5 = detail::meta::placeholder<5>;
+            using _6 = detail::meta::placeholder<6>;
+            using _7 = detail::meta::placeholder<7>;
+            using _8 = detail::meta::placeholder<8>;
+            using _9 = detail::meta::placeholder<9>;
         }
         using namespace placeholders;
     }
@@ -429,17 +490,31 @@ namespace eggs { namespace tupleware
 
 #   define EGGS_TUPLEWARE_RESULT_OF(Name, F)                                  \
     template <typename Args, typename Enable = void>                          \
-    struct Name {};                                                           \
+    struct Name ## _impl                                                      \
+    {};                                                                       \
                                                                               \
     template <typename ...Args>                                               \
-    struct Name<                                                              \
+    struct Name ## _impl<                                                     \
         tupleware::pack<Args...>                                              \
       , tupleware::detail::always_void<decltype(F(std::declval<Args>()...))>  \
     >                                                                         \
     {                                                                         \
         using type = decltype(F(std::declval<Args>()...));                    \
-    }                                                                         \
+    };                                                                        \
+                                                                              \
+    template <typename ...Args>                                               \
+    struct Name                                                               \
+      : Name ## _impl<pack<Args...>>                                          \
+    {}                                                                        \
     /**/
+
+    ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
+    namespace detail { namespace meta
+    {
+        using namespace ::eggs::tupleware::meta;
+    }}
+    //! \endcond
 }}
 
 #endif /*EGGS_TUPLEWARE_CORE_HPP*/
