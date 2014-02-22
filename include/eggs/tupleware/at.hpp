@@ -10,44 +10,12 @@
 #define EGGS_TUPLEWARE_AT_HPP
 
 #include <eggs/tupleware/core.hpp>
-#include <eggs/tupleware/is_tuple.hpp>
-#include <eggs/tupleware/size.hpp>
-
-#include <cstddef>
-#include <tuple>
-#include <type_traits>
-#include <utility>
+#include <eggs/tupleware/detail/at.hpp>
 
 namespace eggs { namespace tupleware
 {
     namespace meta
     {
-        //! \cond DETAIL
-        namespace detail
-        {
-            template <
-                std::size_t I, typename Tuple
-              , typename Enable = void
-            >
-            struct at_impl;
-
-            template <std::size_t I, typename Tuple>
-            struct at_impl<I, Tuple const>;
-
-            template <std::size_t I, typename Tuple>
-            struct at_impl<
-                I, Tuple
-              , typename std::enable_if<
-                    (I < extension::tuple<Tuple>::size)
-                >::type
-            > : identity<
-                    typename extension::tuple<Tuple>::
-                        template element<I>::type
-                >
-            {};
-        }
-        //! \endcond
-
         //! \brief The `I`th element of `Tuple`
         //!
         //! \details Has a BaseCharacteristic of `meta::identity<TI>`, where
@@ -67,36 +35,11 @@ namespace eggs { namespace tupleware
         //!      \link functional::at \endlink
         template <std::size_t I, typename Tuple>
         struct at
-          : detail::at_impl<I, Tuple>
+          : detail::meta::at<I, Tuple>
         {};
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <
-            std::size_t I
-          , typename Tuple
-          , typename Enable =
-                typename std::enable_if<
-                    (I < result_of::size_t<Tuple>::value)
-                >::type
-        >
-        constexpr auto at(meta::size_t<I>, Tuple&& tuple)
-        EGGS_TUPLEWARE_AUTO_RETURN(
-            extension::tuple<typename std::decay<Tuple>::type>::
-                template element<I>::get(std::forward<Tuple>(tuple))
-        )
-
-        ///////////////////////////////////////////////////////////////////////
-        EGGS_TUPLEWARE_RESULT_OF(
-            _result_of_at
-          , ::eggs::tupleware::detail::at
-        );
-    }
-    //! \endcond
-
     namespace result_of
     {
         //! \brief Result type of an invocation of \ref at<I>(Tuple&&)
@@ -111,10 +54,10 @@ namespace eggs { namespace tupleware
         //!      \link functional::at \endlink
         template <std::size_t I, typename Tuple>
         struct at
-          : detail::_result_of_at<pack<
+          : detail::_result_of_at<
                 meta::size_t<I>
               , Tuple
-            >>
+            >
         {};
 
         //! \brief Alias for \link result_of::at \endlink
@@ -188,17 +131,11 @@ namespace eggs { namespace tupleware
     ///////////////////////////////////////////////////////////////////////////
     //! \cond DETAIL
     template <std::size_t I, typename Tuple>
-    typename tupleware::detail::enable_if_failure<
+    typename detail::enable_if_failure<
         result_of::at<I, Tuple>
-    >::type at(Tuple&& /*tuple*/)
+    >::type at(Tuple&& tuple)
     {
-        static_assert(
-            result_of::is_tuple_t<Tuple>::value
-          , "'tuple' argument is not a Tuple");
-
-        static_assert(
-            I < result_of::size_t<Tuple>::value
-          , "'I' argument is out of bounds");
+        detail::_explain_at<I>(std::forward<Tuple>(tuple));
     }
     //! \endcond
 }}
