@@ -122,15 +122,15 @@ namespace eggs { namespace tupleware { namespace detail
 
     template <
         std::size_t ...Is
-      , typename F, typename Tuple
+      , typename F, typename Args
     >
     constexpr auto invoke_expand_impl(
         index_sequence<Is...>
-      , F&& f, Tuple&& tuple)
+      , F&& f, Args&& args)
     EGGS_TUPLEWARE_AUTO_RETURN(
         invoke_impl(
             std::forward<F>(f)
-          , at(meta::size_t<Is>{}, std::forward<Tuple>(tuple))...)
+          , at(meta::size_t<Is>{}, std::forward<Args>(args))...)
     )
 
     ///////////////////////////////////////////////////////////////////////////
@@ -150,21 +150,21 @@ namespace eggs { namespace tupleware { namespace detail
         invoke_impl(std::forward<F>(f), std::forward<Args>(args)...)
     )
 
-    template <typename F, typename Tuple>
-    constexpr auto invoke(F&& f, expand_tuple_t, Tuple&& tuple)
+    template <typename F, typename Args>
+    constexpr auto invoke(F&& f, expand_tuple_t, Args&& args)
     EGGS_TUPLEWARE_AUTO_RETURN(
         invoke_expand_impl(
-            index_sequence_for_tuple<Tuple>{}
-          , std::forward<F>(f), std::forward<Tuple>(tuple))
+            index_sequence_for_tuple<Args>{}
+          , std::forward<F>(f), std::forward<Args>(args))
     )
 
-    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     EGGS_TUPLEWARE_RESULT_OF(
         _result_of_invoke
       , ::eggs::tupleware::detail::invoke
     );
 
-    ///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     template <typename F, typename ...Args>
     void _explain_invoke(F&& /*f*/, Args&&... /*args*/)
     {
