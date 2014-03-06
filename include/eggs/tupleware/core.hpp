@@ -184,6 +184,37 @@ namespace eggs { namespace tupleware
         {};
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
+    namespace detail
+    {
+        template <bool Value>
+        struct noexcept_bool
+        {
+            constexpr explicit noexcept_bool() noexcept(Value) {}
+        };
+
+        template <typename ...T>
+        void noexcept_join(T const&...) noexcept;
+
+        template <typename ...Values>
+        struct noexcept_and
+          : std::integral_constant<
+                bool
+              , noexcept(noexcept_join(noexcept_bool<Values::value>{}...))
+            >
+        {};
+
+        template <typename ...Values>
+        struct noexcept_or
+          : std::integral_constant<
+                bool
+              , !noexcept(noexcept_join(noexcept_bool<!Values::value>{}...))
+            >
+        {};
+    }
+    //! \endcond
+
     //! \page placeholder_expression placeholder expression
     //!
     //! A placeholder expression is a type that is either a placeholder or a
@@ -208,38 +239,19 @@ namespace eggs { namespace tupleware
 
         ///////////////////////////////////////////////////////////////////////
         template <typename T>
-        void _is_placeholder_expression_join(T const&...) noexcept;
-
-        template <typename T>
         struct is_placeholder_expression
           : std::false_type
-        {
-            constexpr is_placeholder_expression()
-                noexcept(true)
-            {}
-        };
+        {};
 
         template <std::size_t I>
         struct is_placeholder_expression<placeholder<I>>
           : std::true_type
-        {
-            constexpr is_placeholder_expression()
-                noexcept(false)
-            {}
-        };
+        {};
 
         template <template <typename...> class Template, typename ...T>
         struct is_placeholder_expression<Template<T...>>
-          : std::integral_constant<
-                bool
-              , !noexcept(_is_placeholder_expression_join(
-                    is_placeholder_expression<T>{}...))
-            >
-        {
-            constexpr is_placeholder_expression()
-                noexcept(noexcept(_is_placeholder_expression_join(
-                    is_placeholder_expression<T>{}...)));
-        };
+          : noexcept_and<is_placeholder_expression<T>...>
+        {};
     }}
     //! \endcond
 
