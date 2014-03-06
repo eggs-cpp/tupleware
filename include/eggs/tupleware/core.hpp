@@ -277,65 +277,6 @@ namespace eggs { namespace tupleware
     //! \cond DETAIL
     namespace detail
     {
-        template <typename T>
-        struct _always_void_impl
-        {
-            using type = void;
-        };
-
-        template <typename T>
-        using always_void =
-            typename _always_void_impl<T>::type;
-    }
-    //! \endcond
-
-    ///////////////////////////////////////////////////////////////////////////
-    //! \cond DETAIL
-    namespace detail
-    {
-        template <typename Expr, typename T, typename Enable = void>
-        struct _enable_if_failure_impl
-        {
-            using type = T;
-        };
-
-        template <typename Expr, typename T>
-        struct _enable_if_failure_impl<
-            Expr, T
-          , always_void<typename Expr::type>
-        >
-        {};
-
-        ///////////////////////////////////////////////////////////////////////
-        template <typename Expr, typename T, typename Enable = void>
-        struct _disable_if_failure_impl
-        {};
-
-        template <typename Expr, typename T>
-        struct _disable_if_failure_impl<
-            Expr, T
-          , always_void<typename Expr::type>
-        >
-        {
-            using type = T;
-        };
-
-        template <typename Expr, typename T = void>
-        struct enable_if_failure
-          : detail::_enable_if_failure_impl<Expr, T>
-        {};
-
-        template <typename Expr, typename T = void>
-        struct disable_if_failure
-          : detail::_disable_if_failure_impl<Expr, T>
-        {};
-    }
-    //! \endcond
-
-    ///////////////////////////////////////////////////////////////////////////
-    //! \cond DETAIL
-    namespace detail
-    {
         template <typename TD>
         struct _decay_impl
         {
@@ -453,11 +394,58 @@ namespace eggs { namespace tupleware
     //! \cond DETAIL
     namespace detail
     {
-        template <bool Value>
-        struct noexcept_bool
+        template <typename T>
+        struct _always_void_impl
         {
-            constexpr explicit noexcept_bool() noexcept(Value) {}
+            using type = void;
         };
+
+        template <typename T>
+        using always_void =
+            typename _always_void_impl<T>::type;
+    }
+    //! \endcond
+
+    ///////////////////////////////////////////////////////////////////////////
+    //! \cond DETAIL
+    namespace detail
+    {
+        template <typename Expr, typename T, typename Enable = void>
+        struct _enable_if_failure_impl
+        {
+            using type = T;
+        };
+
+        template <typename Expr, typename T>
+        struct _enable_if_failure_impl<
+            Expr, T
+          , always_void<typename Expr::type>
+        >
+        {};
+
+        ///////////////////////////////////////////////////////////////////////
+        template <typename Expr, typename T, typename Enable = void>
+        struct _disable_if_failure_impl
+        {};
+
+        template <typename Expr, typename T>
+        struct _disable_if_failure_impl<
+            Expr, T
+          , always_void<typename Expr::type>
+        >
+        {
+            using type = T;
+        };
+
+        template <typename Expr, typename T = void>
+        struct enable_if_failure
+          : detail::_enable_if_failure_impl<Expr, T>
+        {};
+
+        template <typename Expr, typename T = void>
+        struct disable_if_failure
+          : detail::_disable_if_failure_impl<Expr, T>
+        {};
     }
     //! \endcond
 
