@@ -27,7 +27,6 @@ namespace eggs { namespace tupleware { namespace detail
         template <
             typename Is
           , typename Tuple, typename F, typename State
-          , typename Enable = void
         >
         struct fold_impl
         {};
@@ -36,9 +35,6 @@ namespace eggs { namespace tupleware { namespace detail
         struct fold_impl<
             index_sequence<>
           , Tuple, F, State
-          , typename std::enable_if<
-                is_tuple<Tuple>::value
-            >::type
         > : identity<State>
         {};
 
@@ -49,9 +45,6 @@ namespace eggs { namespace tupleware { namespace detail
         struct fold_impl<
             index_sequence<I, Is...>
           , Tuple, F, State
-          , typename std::enable_if<
-                is_tuple<Tuple>::value
-            >::type
         > : fold_impl<
                 index_sequence<Is...>
               , Tuple, F
@@ -63,11 +56,26 @@ namespace eggs { namespace tupleware { namespace detail
         {};
         
         ///////////////////////////////////////////////////////////////////////
-        template <typename Tuple, typename UnaryMetaFunction, typename State>
+        template <
+            typename Tuple, typename F, typename State
+          , typename Enable = void
+        >
         struct fold
-          : fold_impl<
+        {
+            static_assert(
+                is_tuple<Tuple>::value
+              , "'Tuple' is not a tuple");
+        };
+        
+        template <typename Tuple, typename F, typename State>
+        struct fold<
+            Tuple, F, State
+          , typename std::enable_if<
+                is_tuple<Tuple>::value
+            >::type
+        > : fold_impl<
                 index_sequence_for_tuple<Tuple>
-              , Tuple, UnaryMetaFunction, State
+              , Tuple, F, State
             >
         {};
     }

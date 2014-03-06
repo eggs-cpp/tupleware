@@ -26,7 +26,6 @@ namespace eggs { namespace tupleware { namespace detail
         template <
             typename Is, typename Js
           , typename Tuple, typename Value
-          , typename Enable = void
         >
         struct insert_impl
         {};
@@ -38,9 +37,6 @@ namespace eggs { namespace tupleware { namespace detail
         struct insert_impl<
             index_sequence<Is...>, index_sequence<Js...>
           , Tuple, Value
-          , typename std::enable_if<
-                is_tuple<Tuple>::value
-            >::type
         >
         {
             using type =
@@ -55,7 +51,6 @@ namespace eggs { namespace tupleware { namespace detail
         template <
             typename Is, typename Js, typename Ks
           , typename Tuple, typename Value
-          , typename Enable = void
         >
         struct insert_expand_impl
         {};
@@ -67,10 +62,6 @@ namespace eggs { namespace tupleware { namespace detail
         struct insert_expand_impl<
             index_sequence<Is...>, index_sequence<Js...>, index_sequence<Ks...>
           , Tuple, Value
-          , typename std::enable_if<
-                is_tuple<Tuple>::value
-             && is_tuple<Value>::value
-            >::type
         >
         {
             using type =
@@ -85,9 +76,35 @@ namespace eggs { namespace tupleware { namespace detail
         template <
             std::size_t Where
           , typename Tuple, typename Value, typename Expand = void
+          , typename Enable = void
         >
         struct insert
-          : insert_impl<
+        {
+            static_assert(
+                is_tuple<Tuple>::value
+              , "'Tuple' is not a tuple");
+            
+            static_assert(
+                Where <= size<Tuple>::value
+              , "'Where' argument is out of bounds");
+
+            static_assert(
+                !std::is_same<Value, meta::expand_tuple>::value
+             || is_tuple<Expand>::value
+              , "'Expand' is not a tuple");
+        };
+
+        template <
+            std::size_t Where
+          , typename Tuple, typename Value
+        >
+        struct insert<
+            Where, Tuple, Value, void
+          , typename std::enable_if<
+                is_tuple<Tuple>::value
+             && (Where <= size<Tuple>::value)
+            >::type
+        > : insert_impl<
                 make_index_sequence<Where>
               , make_index_sequence<size<Tuple>::value - Where>
               , Tuple, Value
@@ -98,8 +115,14 @@ namespace eggs { namespace tupleware { namespace detail
             std::size_t Where
           , typename Tuple, typename Value
         >
-        struct insert<Where, Tuple, meta::expand_tuple, Value>
-          : insert_expand_impl<
+        struct insert<
+            Where, Tuple, meta::expand_tuple, Value
+          , typename std::enable_if<
+                is_tuple<Tuple>::value
+             && (Where <= size<Tuple>::value)
+             && is_tuple<Value>::value
+            >::type
+        > : insert_expand_impl<
                 make_index_sequence<Where>
               , make_index_sequence<size<Tuple>::value - Where>
               , index_sequence_for_tuple<Value>

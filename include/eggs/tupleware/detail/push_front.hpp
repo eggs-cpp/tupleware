@@ -25,7 +25,6 @@ namespace eggs { namespace tupleware { namespace detail
         template <
             typename Is
           , typename Tuple, typename Value
-          , typename Enable = void
         >
         struct push_front_impl
         {};
@@ -37,9 +36,6 @@ namespace eggs { namespace tupleware { namespace detail
         struct push_front_impl<
             index_sequence<Is...>
           , Tuple, Value
-          , typename std::enable_if<
-                is_tuple<Tuple>::value
-            >::type
         >
         {
             using type =
@@ -53,7 +49,6 @@ namespace eggs { namespace tupleware { namespace detail
         template <
             typename Is, typename Js
           , typename Tuple, typename Value
-          , typename Enable = void
         >
         struct push_front_expand_impl
         {};
@@ -65,9 +60,6 @@ namespace eggs { namespace tupleware { namespace detail
         struct push_front_expand_impl<
             index_sequence<Is...>, index_sequence<Js...>
           , Tuple, Value
-          , typename std::enable_if<
-                is_tuple<Tuple>::value && is_tuple<Value>::value
-            >::type
         >
         {
             using type =
@@ -78,17 +70,42 @@ namespace eggs { namespace tupleware { namespace detail
         };
 
         ///////////////////////////////////////////////////////////////////////
-        template <typename Tuple, typename Value, typename Expand = void>
+        template <
+            typename Tuple, typename Value, typename Expand = void
+          , typename Enable = void
+        >
         struct push_front
-          : push_front_impl<
+        {
+            static_assert(
+                is_tuple<Tuple>::value
+              , "'Tuple' is not a tuple");
+            
+            static_assert(
+                !std::is_same<Value, meta::expand_tuple>::value
+             || is_tuple<Expand>::value
+              , "'Expand' is not a tuple");
+        };
+
+        template <typename Tuple, typename Value>
+        struct push_front<
+            Tuple, Value, void
+          , typename std::enable_if<
+                is_tuple<Tuple>::value
+            >::type
+        > : push_front_impl<
                 index_sequence_for_tuple<Tuple>
               , Tuple, Value
             >
         {};
 
         template <typename Tuple, typename Value>
-        struct push_front<Tuple, meta::expand_tuple, Value>
-          : push_front_expand_impl<
+        struct push_front<
+            Tuple, meta::expand_tuple, Value
+          , typename std::enable_if<
+                is_tuple<Tuple>::value
+             && is_tuple<Value>::value
+            >::type
+        > : push_front_expand_impl<
                 index_sequence_for_tuple<Tuple>
               , index_sequence_for_tuple<Value>
               , Tuple, Value

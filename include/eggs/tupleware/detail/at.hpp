@@ -27,10 +27,20 @@ namespace eggs { namespace tupleware { namespace detail
             std::size_t I, typename Tuple
           , typename Enable = void
         >
-        struct at;
+        struct at
+        {
+            static_assert(
+                is_tuple<Tuple>::value
+              , "'Tuple' is not a tuple");
+        };
 
         template <std::size_t I, typename Tuple>
-        struct at<I, Tuple const>;
+        struct at<I, Tuple const>
+        {
+            static_assert(
+                is_tuple<Tuple const>::value
+              , "cv-qualified 'Tuple' is not a tuple");
+        };
 
         template <std::size_t I, typename Tuple>
         struct at<

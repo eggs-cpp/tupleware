@@ -27,7 +27,6 @@ namespace eggs { namespace tupleware { namespace detail
         template <
             typename Is
           , typename Tuple, typename F
-          , typename Enable = void
         >
         struct transform_impl
         {};
@@ -39,9 +38,6 @@ namespace eggs { namespace tupleware { namespace detail
         struct transform_impl<
             index_sequence<Is...>
           , Tuple, F
-          , typename std::enable_if<
-                is_tuple<Tuple>::value
-            >::type
         > : identity<
                 tupleware::tuple<
                     typename invoke<
@@ -53,11 +49,26 @@ namespace eggs { namespace tupleware { namespace detail
         {};
 
         ///////////////////////////////////////////////////////////////////////
-        template <typename Tuple, typename UnaryMetaFunction>
+        template <
+            typename Tuple, typename F
+          , typename Enable = void
+        >
         struct transform
-          : transform_impl<
+        {
+            static_assert(
+                is_tuple<Tuple>::value
+              , "'Tuple' is not a tuple");
+        };
+
+        template <typename Tuple, typename F>
+        struct transform<
+            Tuple, F
+          , typename std::enable_if<
+                is_tuple<Tuple>::value
+            >::type
+        > : transform_impl<
                 index_sequence_for_tuple<Tuple>
-              , Tuple, UnaryMetaFunction
+              , Tuple, F
             >
         {};
     }
